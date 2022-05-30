@@ -18,11 +18,11 @@ odoo_oci_image: null
 odoo_proxy: null
 odoo_version: 15.0
 paths_without_crawlers:
-- /web
-- /website/info
+  - /web
+  - /website/info
 postgres_dbname: prod
 postgres_username: odoo
-postgres_version: '13'
+postgres_version: "13"
 project_author: Xtendoo
 project_license: AGPL-3.0-or-later
 project_name: xtendoo
@@ -32,4 +32,4 @@ smtp_default_from: null
 smtp_relay_host: null
 smtp_relay_port: 587
 smtp_relay_user: null
-smtp_relay_version: '10'
+smtp_relay_version: "10"

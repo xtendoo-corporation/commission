@@ -47,14 +47,22 @@ services:
       - ./odoo/auto:/opt/odoo/auto:rw,z
     depends_on:
       - db
+      - proxy_smtp_mailgun
+      - proxy_imap
       - proxy_cdnjs_cloudflare_com
       - proxy_fonts_googleapis_com
       - proxy_fonts_gstatic_com
       - proxy_www_google_com
       - proxy_www_googleapis_com
       - proxy_www_gravatar_com
-      - smtp
+      - proxy_download_geonames_proxy
+      - proxy_flamero_webservice
       - wdb
+      - mailgun_api_eu
+      - mailgun_api
+      - mailgun_api_route_send
+      - mailgun_api_route_rec
+      - mailgun_api_open
     command:
       - odoo
       - --limit-memory-soft=0
@@ -62,7 +70,8 @@ services:
       - --limit-time-real=9999999
       - --workers=0
       - --dev=reload,qweb,werkzeug,xml
-
+  #      - --update=all
+  #      - --stop-after-init
   db:
     extends:
       file: common.yaml
@@ -81,14 +90,6 @@ services:
     depends_on:
       - db
 
-  smtp:
-    extends:
-      file: common.yaml
-      service: smtpfake
-    networks: *public
-    ports:
-      - "127.0.0.1:15025:8025"
-
   wdb:
     image: kozea/wdb
     networks: *public
@@ -97,7 +98,47 @@ services:
     # HACK https://github.com/Kozea/wdb/issues/136
     init: true
 
+  proxy_smtp_mailgun:
+    image: tecnativa/whitelist
+    networks:
+      default:
+        aliases:
+          - smtp.eu.mailgun.org
+      public:
+    ports:
+      - "587:587"
+    environment:
+      TARGET: smtp.eu.mailgun.org
+      PRE_RESOLVE: 1
+      PORT: "587"
+
+  proxy_imap:
+    image: tecnativa/whitelist
+    networks:
+      default:
+        aliases:
+          - imap.servidor-correo.net
+      public:
+    ports:
+      - "993:993"
+    environment:
+      TARGET: imap.servidor-correo.net
+      PRE_RESOLVE: 1
+      PORT: "993"
+
   # Whitelist outgoing traffic for tests, reports, etc.
+  proxy_flamero_webservice:
+    image: ghcr.io/tecnativa/docker-whitelist:latest
+    networks:
+      default:
+        aliases:
+          - flamero.xtendoo.es
+      public:
+    environment:
+      TARGET: flamero.xtendoo.es
+      PORT: 9048
+      PRE_RESOLVE: 1
+
   proxy_cdnjs_cloudflare_com:
     image: ghcr.io/tecnativa/docker-whitelist:latest
     networks:
@@ -162,6 +203,72 @@ services:
       public:
     environment:
       TARGET: www.gravatar.com
+      PRE_RESOLVE: 1
+
+  proxy_download_geonames_proxy:
+    image: ghcr.io/tecnativa/docker-whitelist:latest
+    networks:
+      default:
+        aliases:
+          - download.geonames.org
+      public:
+    environment:
+      TARGET: download.geonames.org
+      PRE_RESOLVE: 1
+
+  mailgun_api_eu:
+    image: tecnativa/whitelist
+    networks:
+      default:
+        aliases:
+          - api.eu.mailgun.net
+      public:
+    environment:
+      TARGET: api.eu.mailgun.net
+      PRE_RESOLVE: 1
+
+  mailgun_api:
+    image: tecnativa/whitelist
+    networks:
+      default:
+        aliases:
+          - api.mailgun.net
+      public:
+    environment:
+      TARGET: api.mailgun.net
+      PRE_RESOLVE: 1
+
+  mailgun_api_route_send:
+    image: tecnativa/whitelist
+    networks:
+      default:
+        aliases:
+          - mxa.eu.mailgun.org
+      public:
+    environment:
+      TARGET: mxa.eu.mailgun.org
+      PRE_RESOLVE: 1
+
+  mailgun_api_route_rec:
+    image: tecnativa/whitelist
+    networks:
+      default:
+        aliases:
+          - mxb.eu.mailgun.org
+      public:
+    environment:
+      TARGET: mxb.eu.mailgun.org
+      PRE_RESOLVE: 1
+
+  mailgun_api_open:
+    image: tecnativa/whitelist
+    networks:
+      default:
+        aliases:
+          - eu.mailgun.org
+      public:
+    environment:
+      TARGET: eu.mailgun.org
       PRE_RESOLVE: 1
 
 networks:
